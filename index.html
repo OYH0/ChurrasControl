@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta name="ethereum-dapp-url-bar" content="none">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🍖 ChurrasControl - Gestão de Carnes</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container authenticated-content" style="display:none;">
+        <header>
+            <div class="header-content">
+                <h1><i class="fas fa-utensils"></i> ChurrasControl</h1>
+                <p>Gestão completa do seu estoque de carnes para churrasco</p>
+            </div>
+            <div id="currentUser" class="current-user"></div>
+            <button id="logoutBtn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> <span>Sair</span>
+            </button>
+        </header>
+
+        <nav class="mobile-nav" id="mobileNav">
+            <ul>
+                <li><a href="#"><i class="fas fa-chart-bar"></i> Estoque</a></li>
+                <li><a href="#"><i class="fas fa-history"></i> Histórico</a></li>
+                <li><a href="#" id="mobileLogoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+            </ul>
+        </nav>
+        <div class="menu-overlay" id="menuOverlay"></div>
+
+        <div class="dashboard">
+            <div class="chart-container">
+                <h2 class="chart-title"><i class="fas fa-chart-bar"></i> Estoque Completo</h2>
+                <div id="stockChartContainer" class="chart-wrapper">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <h2 class="chart-title"><i class="fas fa-chart-pie"></i> Top 5 Carnes</h2>
+                <div id="topProductsChartContainer" class="chart-wrapper">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table id="meatTable">
+                <thead>
+                    <tr>
+                        <th>Corte de Carne</th>
+                        <th>Quantidade (kg)</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="meatTableBody">
+                    <!-- As linhas serão preenchidas pelo JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="history">
+            <h2 class="history-title"><i class="fas fa-history"></i> Histórico de Movimentações</h2>
+            <div class="history-list" id="movementHistory">
+                <!-- Histórico será preenchido pelo JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

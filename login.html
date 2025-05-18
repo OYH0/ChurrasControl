@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🍖 ChurrasControl - Login</title>
+    <link rel="stylesheet" href="css/login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1><i class="fas fa-utensils"></i> ChurrasControl</h1>
+                <p>Gestão de estoque para churrascarias</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username"><i class="fas fa-user"></i> Usuário</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                    <div id="usernameError" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Senha</label>
+                    <input type="password" id="password" name="password" required minlength="4" autocomplete="current-password">
+                    <div id="passwordError" class="error-message"></div>
+                </div>
+                
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Não tem conta? <a href="#" id="registerLink">Cadastre-se</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para registro mobile -->
+    <div id="mobileRegisterModal" class="mobile-modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Cadastro</h3>
+            <input type="text" id="mobileUsername" placeholder="Nome de usuário">
+            <input type="password" id="mobilePassword" placeholder="Senha (mínimo 4 caracteres)">
+            <button id="confirmRegister">Cadastrar</button>
+            <button id="cancelRegister">Cancelar</button>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>

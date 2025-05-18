@@ -1,0 +1,962 @@
+:root {
+    --primary: #e74c3c;
+    --primary-dark: #c0392b;
+    --secondary: #2ecc71;
+    --secondary-dark: #27ae60;
+    --dark: #2c3e50;
+    --light: #ecf0f1;
+    --gray: #95a5a6;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f5f7fa;
+    color: var(--dark);
+    line-height: 1.6;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 20px 0;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+header::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    transform: rotate(30deg);
+}
+
+header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    position: relative;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+header p {
+    font-weight: 300;
+    opacity: 0.9;
+    position: relative;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    position: relative;
+}
+
+.chart-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-title {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-title i {
+    color: var(--primary);
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 400px;
+    width: 100%;
+}
+
+#stockChartContainer {
+    height: 500px;
+}
+
+#topProductsChartContainer {
+    height: 400px;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin: 30px 0;
+}
+
+th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 15px;
+    text-align: left;
+    font-weight: 500;
+}
+
+th:first-child {
+    border-top-left-radius: 10px;
+}
+
+th:last-child {
+    border-top-right-radius: 10px;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.btn-add {
+    background-color: var(--secondary);
+    color: white;
+}
+
+.btn-add:hover {
+    background-color: var(--secondary-dark);
+}
+
+.btn-remove {
+    background-color: var(--danger);
+    color: white;
+}
+
+.btn-remove:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-delete {
+    background-color: var(--gray);
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #7f8c8d;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantity-input {
+    width: 70px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.quantity-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+}
+
+.history {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-top: 30px;
+}
+
+.history-title {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.history-title i {
+    color: var(--primary);
+}
+
+.history-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.history-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-details {
+    font-size: 0.9rem;
+    color: var(--gray);
+}
+
+.add {
+    color: var(--success);
+}
+
+.remove {
+    color: var(--danger);
+}
+
+.delete {
+    color: var(--gray);
+}
+
+.history-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.remove .history-icon {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.delete .history-icon {
+    background-color: rgba(149, 165, 166, 0.1);
+}
+
+.history-time {
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* Login Styles */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    padding: 20px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h1 {
+    color: var(--primary);
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+.login-header p {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--dark);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: var(--transition);
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
+
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 25px;
+    color: var(--gray);
+}
+
+.login-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    color: var(--danger);
+    font-size: 0.9rem;
+    margin-top: 5px;
+    display: none;
+}
+
+/* Hide main app when not authenticated */
+.authenticated-content {
+    display: none;
+}
+
+/* Logout button */
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 12px;
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.logout-btn i {
+    margin-right: 5px;
+}
+
+/* Hamburger menu */
+.hamburger-menu {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile menu */
+.mobile-nav {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background: var(--primary-dark);
+    z-index: 999;
+    transition: var(--transition);
+    padding-top: 60px;
+}
+
+.mobile-nav.active {
+    left: 0;
+}
+
+.mobile-nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.mobile-nav ul li a {
+    display: block;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-nav ul li a i {
+    margin-right: 10px;
+}
+
+.mobile-nav ul li a:hover {
+    background: var(--primary);
+}
+
+/* Menu overlay */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 998;
+    display: none;
+}
+
+.menu-overlay.active {
+    display: block;
+}
+
+/* Button group for mobile */
+.button-group-mobile {
+    display: flex;
+    gap: 5px;
+}
+
+.button-group-mobile button {
+    flex: 1;
+    padding: 8px;
+    min-width: auto;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chart-container, table, .history {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    /* Header */
+    header {
+        padding: 15px 0;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+        margin: 0 50px;
+        padding-top: 5px;
+    }
+    
+    header p {
+        font-size: 0.8rem;
+        margin: 5px 20px 0;
+    }
+    
+    /* Layout */
+    .dashboard {
+        gap: 15px;
+    }
+    
+    /* Charts */
+    .chart-wrapper {
+        height: 250px;
+    }
+    
+    #stockChartContainer {
+        height: 300px;
+    }
+    
+    #topProductsChartContainer {
+        height: 250px;
+    }
+    
+    /* Table */
+    table {
+        font-size: 0.85rem;
+        margin: 15px 0;
+        display: block;
+        overflow-x: auto;
+    }
+    
+    th, td {
+        padding: 10px 8px;
+        white-space: nowrap;
+    }
+    
+    /* Buttons */
+    .action-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    button {
+        width: 100%;
+        padding: 8px;
+        font-size: 0.8rem;
+        justify-content: center;
+    }
+    
+    .btn-add, .btn-remove, .btn-delete {
+        min-width: 40px;
+    }
+    
+    .quantity-control {
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .quantity-input {
+        width: 60px;
+        padding: 6px;
+    }
+    
+    /* Login card */
+    .login-card {
+        padding: 25px;
+        margin: 15px;
+    }
+    
+    .login-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    /* Hide icons in titles */
+    .chart-title i, .history-title i {
+        display: none;
+    }
+    
+    /* Show hamburger menu */
+    .hamburger-menu {
+        display: block;
+    }
+    
+    /* Adjust logout button */
+    .logout-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .logout-btn i {
+        margin-right: 0;
+    }
+    
+    .logout-btn span {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) {
+    .dashboard {
+        grid-template-columns: 2fr 1fr;
+    }
+    
+    /* Ensure table fits on desktop */
+    table {
+        table-layout: fixed;
+    }
+}
+
+.current-user {
+    position: absolute;
+    top: 20px;
+    right: 100px;
+    color: white;
+    font-size: 0.9rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 5px 10px;
+    border-radius: 15px;
+}
+
+@media (max-width: 768px) {
+    .current-user {
+        right: 70px;
+        font-size: 0.8rem;
+        padding: 3px 8px;
+    }
+}
+
+/* Adicione isso na seção de media queries mobile */
+@media (max-width: 768px) {
+    header {
+        padding: 15px 0;
+        position: relative;
+    }
+
+    .hamburger-menu {
+        left: 15px;
+        top: 15px;
+    }
+
+    .current-user {
+        right: 15px;
+        top: 15px;
+        max-width: 120px;
+        font-size: 0.8rem;
+        padding: 5px 8px;
+    }
+
+    .logout-btn {
+        display: none; /* Esconde o botão de logout padrão em mobile */
+    }
+
+    /* Ajuste para o título principal */
+    header h1 {
+        margin: 0 80px 0 50px;
+        font-size: 1.4rem;
+        padding-top: 5px;
+    }
+
+    header p {
+        margin: 5px 20px 0;
+    }
+}
+
+.header-content {
+    text-align: center;
+    margin: 0 auto;
+    max-width: calc(100% - 160px);
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        max-width: calc(100% - 100px);
+    }
+    
+    /* Ajuste fino para os ícones */
+    .hamburger-menu {
+        z-index: 100;
+    }
+    
+    .current-user {
+        z-index: 99;
+    }
+}
+
+/* Estilos para a versão desktop */
+@media (min-width: 769px) {
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 10px;
+    }
+
+    .quantity-input {
+        width: 60px;
+        text-align: center;
+        padding: 8px;
+    }
+
+    .btn-add, .btn-remove {
+        min-width: 100px;
+        padding: 8px 12px;
+        justify-content: center;
+    }
+
+    .btn-delete {
+        min-width: 120px;
+        padding: 8px 12px;
+    }
+}
+
+/* Alinhamento vertical dos itens na célula */
+td {
+    vertical-align: middle;
+}
+
+/* Garantir que os botões tenham altura consistente */
+.btn-add, .btn-remove, .btn-delete {
+    height: 38px;
+    box-sizing: border-box;
+}
+
+/* Alinhamento do input com os botões */
+.quantity-input {
+    height: 38px;
+}
+
+/* No seu CSS existente */
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* Defina larguras para as colunas */
+th:nth-child(1) { width: 30%; }  /* Nome da carne */
+th:nth-child(2) { width: 20%; }  /* Quantidade */
+th:nth-child(3) { width: 50%; }  /* Ações */
+
+/* Estilos para os botões na versão desktop */
+@media (min-width: 769px) {
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .quantity-input {
+        width: 70px;
+        padding: 8px;
+        height: 38px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .btn-add, .btn-remove, .btn-delete {
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 12px;
+        white-space: nowrap;
+    }
+    
+    .btn-add { min-width: 110px; }
+    .btn-remove { min-width: 100px; }
+    .btn-delete { min-width: 120px; }
+}
+
+/* Estilos para a versão mobile (existente) */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .quantity-control {
+        flex-direction: row;
+        gap: 5px;
+    }
+    
+    .btn-add, .btn-remove, .btn-delete {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Ajuste específico para a tabela mobile */
+    #meatTable {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    #meatTable td, #meatTable th {
+        padding: 8px 4px; /* Reduz o padding horizontal */
+    }
+    
+    /* Ajuste específico para a coluna de quantidade */
+    #meatTable td:nth-child(2) {
+        padding-right: 2px; /* Reduz ainda mais o espaço à direita */
+        width: 15%; /* Define uma largura fixa menor */
+    }
+    
+    /* Ajuste para a coluna de ações */
+    #meatTable td:nth-child(3) {
+        padding-left: 2px; /* Reduz o espaço à esquerda */
+        width: 35%; /* Define uma largura adequada */
+    }
+    
+    /* Ajuste fino para o input de quantidade */
+    .quantity-input.compact {
+        width: 45px; /* Reduz a largura do input */
+        margin-right: 2px; /* Diminui o espaçamento */
+    }
+    
+    /* Ajuste para o grupo de botões */
+    .button-group-mobile {
+        gap: 3px; /* Reduz o espaço entre botões */
+    }
+}
+
+/* Container compacto para mobile */
+.mobile-actions-compact {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    /* Ajuste fino para a tabela */
+    #meatTable {
+        font-size: 0.8rem;
+    }
+    
+    /* Remove margens extras */
+    #meatTable td:last-child {
+        padding-right: 0;
+    }
+    
+    /* Garante que os botões não quebrem linha */
+    .mobile-actions-compact {
+        white-space: nowrap;
+    }
+}
