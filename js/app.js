@@ -1,627 +1,481 @@
-// Configuração do banco de dados
-const DB_NAME = 'ChurrasControlDB';
-const DB_VERSION = 1;
-const STORE_MEATS = 'meats';
-const STORE_HISTORY = 'history';
-
-// Variáveis globais
-let db = null;
-let stockChart = null;
-let topProductsChart = null;
-
-// Verificação de autenticação
-function checkAuth() {
-    return localStorage.getItem('authenticated') === 'true';
-}
-
-// Redirecionar se não autenticado
-if (!checkAuth() && !window.location.pathname.includes('login.html')) {
-    window.location.href = 'login.html';
-}
-
-// Mostrar conteúdo apenas quando autenticado
-document.addEventListener('DOMContentLoaded', function() {
-    const authContent = document.querySelector('.authenticated-content');
-    const currentUserElement = document.getElementById('currentUser');
-    
-    if (checkAuth()) {
-        if (authContent) authContent.style.display = 'block';
-        if (currentUserElement) {
-            currentUserElement.textContent = localStorage.getItem('username') || '';
-        }
-    }
-});
-
-// Ajustar altura dos gráficos baseado no tamanho da tela
-function adjustChartHeights() {
-    const isMobile = window.innerWidth <= 768;
-    const stockChartContainer = document.getElementById('stockChartContainer');
-    const topProductsChartContainer = document.getElementById('topProductsChartContainer');
-    
-    if (stockChartContainer) {
-        stockChartContainer.style.height = isMobile ? '250px' : '400px';
-    }
-    
-    if (topProductsChartContainer) {
-        topProductsChartContainer.style.height = isMobile ? '250px' : '350px';
-    }
-    
-    if (stockChart) stockChart.resize();
-    if (topProductsChart) topProductsChart.resize();
-}
-
-// Inicializa o banco de dados
-function initDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        
-        request.onerror = (event) => {
-            console.error('Erro ao abrir o banco de dados:', event.target.error);
-            reject('Erro ao abrir o banco de dados');
-        };
-        
-        request.onsuccess = (event) => {
-            db = event.target.result;
-            
-            db.transaction(STORE_MEATS, 'readonly').objectStore(STORE_MEATS).count().onsuccess = (e) => {
-                if (e.target.result === 0) {
-                    populateInitialData().then(resolve).catch(reject);
-                } else {
-                    resolve(db);
-                }
-            };
-        };
-        
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            
-            if (!db.objectStoreNames.contains(STORE_MEATS)) {
-                const meatStore = db.createObjectStore(STORE_MEATS, { keyPath: 'name' });
-                meatStore.createIndex('quantity', 'quantity', { unique: false });
-            }
-            
-            if (!db.objectStoreNames.contains(STORE_HISTORY)) {
-                const historyStore = db.createObjectStore(STORE_HISTORY, { keyPath: 'id', autoIncrement: true });
-                historyStore.createIndex('timestamp', 'timestamp', { unique: false });
-            }
-        };
-    });
-}
-
-// Função para adicionar ou atualizar carne no estoque
-function saveMeat(meat) {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_MEATS, 'readwrite');
-        const store = tx.objectStore(STORE_MEATS);
-        
-        const request = store.put(meat);
-        
-        request.onsuccess = () => resolve();
-        request.onerror = (event) => {
-            console.error('Erro ao salvar carne:', event.target.error);
-            reject(event.target.error);
-        };
-    });
-}
-
-// Função para obter todas as carnes do estoque
-function getAllMeats() {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_MEATS, 'readonly');
-        const store = tx.objectStore(STORE_MEATS);
-        
-        const request = store.getAll();
-        
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = (event) => {
-            console.error('Erro ao obter carnes:', event.target.error);
-            reject(event.target.error);
-        };
-    });
-}
-
-// Função para remover carne do estoque
-function deleteMeat(meatName) {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_MEATS, 'readwrite');
-        const store = tx.objectStore(STORE_MEATS);
-        
-        const request = store.delete(meatName);
-        
-        request.onsuccess = () => resolve();
-        request.onerror = (event) => {
-            console.error('Erro ao remover carne:', event.target.error);
-            reject(event.target.error);
-        };
-    });
-}
-
-// Função para adicionar registro ao histórico
-function addHistoryRecord(record) {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_HISTORY, 'readwrite');
-        const store = tx.objectStore(STORE_HISTORY);
-        
-        record.timestamp = new Date().getTime();
-        
-        const request = store.add(record);
-        
-        request.onsuccess = () => resolve();
-        request.onerror = (event) => {
-            console.error('Erro ao adicionar histórico:', event.target.error);
-            reject(event.target.error);
-        };
-    });
-}
-
-// Função para obter histórico de movimentações
-function getHistory(limit = 20) {
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_HISTORY, 'readonly');
-        const store = tx.objectStore(STORE_HISTORY);
-        const index = store.index('timestamp');
-        
-        const request = index.openCursor(null, 'prev');
-        const results = [];
-        
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor && results.length < limit) {
-                results.push(cursor.value);
-                cursor.continue();
-            } else {
-                resolve(results);
-            }
-        };
-        
-        request.onerror = (event) => {
-            console.error('Erro ao obter histórico:', event.target.error);
-            reject(event.target.error);
-        };
-    });
-}
-
-// Função para destruir gráficos existentes
-function destroyCharts() {
-    if (stockChart) {
-        stockChart.destroy();
-        stockChart = null;
-    }
-    if (topProductsChart) {
-        topProductsChart.destroy();
-        topProductsChart = null;
-    }
-}
-
-// Função para criar os gráficos
-async function createCharts() {
-    const meatStock = await getAllMeats();
-    
-    const stockCtx = document.getElementById('stockChart').getContext('2d');
-    stockChart = new Chart(stockCtx, {
-        type: 'bar',
-        data: {
-            labels: meatStock.map(item => item.name),
-            datasets: [{
-                label: 'Quantidade em estoque (kg)',
-                data: meatStock.map(item => item.quantity),
-                backgroundColor: meatStock.map(item => {
-                    if (item.quantity >= 20) return '#2ecc71';
-                    if (item.quantity >= 10) return '#f39c12';
-                    return '#e74c3c';
-                }),
-                borderWidth: 1,
-                borderRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Quantidade (kg)',
-                        font: { weight: 'bold' }
-                    },
-                    grid: { color: '#eee' }
-                },
-                x: {
-                    ticks: {
-                        autoSkip: true,
-                        maxRotation: window.innerWidth <= 768 ? 0 : 45,
-                        minRotation: window.innerWidth <= 768 ? 0 : 35,
-                        font: { size: window.innerWidth <= 768 ? 10 : 11 }
-                    },
-                    grid: { display: false }
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
-            }
-        }
-    });
-
-    const sortedStock = [...meatStock].sort((a, b) => b.quantity - a.quantity);
-    const topProducts = sortedStock.slice(0, 5);
-    
-    const topCtx = document.getElementById('topProductsChart').getContext('2d');
-    topProductsChart = new Chart(topCtx, {
-        type: 'doughnut',
-        data: {
-            labels: topProducts.map(item => item.name),
-            datasets: [{
-                data: topProducts.map(item => item.quantity),
-                backgroundColor: [
-                    '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'
-                ],
-                borderWidth: 0,
-                hoverOffset: 15
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: window.innerWidth <= 768 ? 'bottom' : 'right',
-                    labels: {
-                        padding: 20,
-                        usePointStyle: true,
-                        font: { size: window.innerWidth <= 768 ? 10 : 12 }
-                    }
-                }
-            },
-            cutout: window.innerWidth <= 768 ? '55%' : '65%'
-        }
-    });
-}
-
-// Função para atualizar os gráficos
-async function updateCharts() {
-    destroyCharts();
-    await createCharts();
-}
-
-// Função para atualizar a exibição do histórico
-async function updateHistoryDisplay() {
-    const historyContainer = document.getElementById('movementHistory');
-    if (!historyContainer) return;
-    
-    historyContainer.innerHTML = '';
-    
-    const historyRecords = await getHistory();
-    
-    historyRecords.forEach(item => {
-        const historyElement = document.createElement('div');
-        historyElement.className = `history-item ${item.action}`;
-        
-        let actionText = '';
-        let iconClass = '';
-        
-        const date = new Date(item.timestamp);
-        const timeString = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const dateString = date.toLocaleDateString('pt-BR');
-        
-        if (item.action === 'add') {
-            actionText = `Adicionado ${item.quantity}kg de ${item.meatName}`;
-            iconClass = 'fas fa-plus';
-            if (item.oldQuantity !== null && item.oldQuantity !== undefined) {
-                actionText += ` (de ${item.oldQuantity}kg para ${item.oldQuantity + item.quantity}kg)`;
-            }
-        } else if (item.action === 'remove') {
-            actionText = `Removido ${item.quantity}kg de ${item.meatName}`;
-            iconClass = 'fas fa-minus';
-            if (item.oldQuantity !== null && item.oldQuantity !== undefined) {
-                const newQuantity = item.oldQuantity - item.quantity;
-                if (newQuantity > 0) {
-                    actionText += ` (de ${item.oldQuantity}kg para ${newQuantity}kg)`;
-                } else {
-                    actionText += ` (item removido do estoque)`;
-                }
-            }
-        } else if (item.action === 'delete') {
-            actionText = `Removido ${item.meatName} do estoque`;
-            iconClass = 'fas fa-trash';
-        }
-        
-        if (window.innerWidth <= 768) {
-            historyElement.innerHTML = `
-                <div class="history-action">
-                    <div class="history-icon">
-                        <i class="${iconClass}"></i>
-                    </div>
-                    <div>
-                        <div>${actionText.split(' (')[0]}</div>
-                        <div class="history-time">${dateString} ${timeString}</div>
-                    </div>
-                </div>
-            `;
-        } else {
-            historyElement.innerHTML = `
-                <div class="history-action">
-                    <div class="history-icon">
-                        <i class="${iconClass}"></i>
-                    </div>
-                    <div>
-                        <div>${actionText}</div>
-                        <div class="history-time">${dateString} ${timeString}</div>
-                    </div>
-                </div>
-                <div class="history-details">
-                    ${item.action === 'delete' && item.oldQuantity !== undefined ? `Estoque: ${item.oldQuantity}kg` : ''}
-                </div>
-            `;
-        }
-        
-        historyContainer.appendChild(historyElement);
-    });
-}
-
-// Função auxiliar para criar botões mobile
-function createMobileButton(className, icon, text = '') {
-    const button = document.createElement('button');
-    button.className = `${className} mobile-btn`;
-    button.innerHTML = `<i class="fas ${icon}"></i>${text ? ' ' + text : ''}`;
-    return button;
-}
-
-// Função para atualizar a tabela (VERSÃO ATUALIZADA)
-async function updateTable() {
-    const tableBody = document.getElementById('meatTableBody');
-    if (!tableBody) return;
-    
-    tableBody.innerHTML = '';
-    
-    const meatStock = await getAllMeats();
-    
-    meatStock.forEach((meat, index) => {
-        const row = document.createElement('tr');
-        
-        // Nome da carne
-        const nameCell = document.createElement('td');
-        nameCell.textContent = meat.name;
-        row.appendChild(nameCell);
-        
-        // Quantidade atual
-        const quantityCell = document.createElement('td');
-        quantityCell.textContent = meat.quantity;
-        row.appendChild(quantityCell);
-        
-        // Célula de ações
-        const actionsCell = document.createElement('td');
-        actionsCell.className = 'action-buttons';
-        
-        if (window.innerWidth <= 768) {
-            // Versão mobile compacta
-            const quantityInput = document.createElement('input');
-            quantityInput.type = 'number';
-            quantityInput.min = '1';
-            quantityInput.value = '1';
-            quantityInput.className = 'quantity-input compact';
-            quantityInput.id = `qty-${index}`;
-            
-            const buttonGroup = document.createElement('div');
-            buttonGroup.className = 'button-group-mobile';
-            
-            // Botões com ícones menores (sem texto em mobile)
-            const addButton = createMobileButton('btn-add', 'fa-plus');
-            const removeButton = createMobileButton('btn-remove', 'fa-minus');
-            const deleteButton = createMobileButton('btn-delete', 'fa-trash');
-            
-            addButton.onclick = () => adjustQuantity(index, true);
-            removeButton.onclick = () => adjustQuantity(index, false);
-            deleteButton.onclick = () => removeMeatByIndex(index);
-            
-            buttonGroup.appendChild(addButton);
-            buttonGroup.appendChild(removeButton);
-            buttonGroup.appendChild(deleteButton);
-            
-            actionsCell.appendChild(quantityInput);
-            actionsCell.appendChild(buttonGroup);
-        } else {
-            // Versão desktop completa
-            const quantityControl = document.createElement('div');
-            quantityControl.className = 'quantity-control';
-            
-            const quantityInput = document.createElement('input');
-            quantityInput.type = 'number';
-            quantityInput.min = '1';
-            quantityInput.value = '1';
-            quantityInput.className = 'quantity-input';
-            quantityInput.id = `qty-${index}`;
-            
-            const addButton = createMobileButton('btn-add', 'fa-plus', 'Adicionar');
-            const removeButton = createMobileButton('btn-remove', 'fa-minus', 'Remover');
-            const deleteButton = createMobileButton('btn-delete', 'fa-trash', 'Remover Item');
-            
-            addButton.onclick = () => adjustQuantity(index, true);
-            removeButton.onclick = () => adjustQuantity(index, false);
-            deleteButton.onclick = () => removeMeatByIndex(index);
-            
-            quantityControl.appendChild(quantityInput);
-            quantityControl.appendChild(addButton);
-            quantityControl.appendChild(removeButton);
-            
-            actionsCell.appendChild(quantityControl);
-            actionsCell.appendChild(deleteButton);
-        }
-        
-        row.appendChild(actionsCell);
-        tableBody.appendChild(row);
-    });
-    
-    await updateCharts();
-}
-
-// Função para ajustar a quantidade
-async function adjustQuantity(index, isAdd) {
-    const quantityInput = document.getElementById(`qty-${index}`);
-    const quantity = parseFloat(quantityInput.value) || 1;
-    
-    if (quantity <= 0) {
-        alert('Por favor, insira uma quantidade válida maior que zero.');
+(function() {
+    if (typeof firebase === 'undefined' || !firebase.apps.length) {
+        console.error('Firebase não foi inicializado corretamente');
         return;
     }
-    
-    const meatStock = await getAllMeats();
-    const meat = meatStock[index];
-    
-    if (isAdd) {
-        const oldQuantity = meat.quantity;
-        meat.quantity += quantity;
-        
-        await saveMeat(meat);
-        await addHistoryRecord({
-            action: 'add',
-            meatName: meat.name,
-            quantity: quantity,
-            oldQuantity: oldQuantity
-        });
-        
-        quantityInput.parentElement.classList.add('pulse');
-        setTimeout(() => {
-            quantityInput.parentElement.classList.remove('pulse');
-        }, 1500);
-    } else {
-        if (meat.quantity >= quantity) {
-            const oldQuantity = meat.quantity;
-            meat.quantity -= quantity;
-            
-            await addHistoryRecord({
-                action: 'remove',
-                meatName: meat.name,
-                quantity: quantity,
-                oldQuantity: oldQuantity
-            });
-            
-            if (meat.quantity <= 0) {
-                await deleteMeat(meat.name);
-            } else {
-                await saveMeat(meat);
-            }
-        } else {
-            alert('Quantidade insuficiente em estoque.');
-            return;
-        }
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const APP_CONSTANTS = {
+        MIN_QUANTITY: 1,
+        MAX_QUANTITY: 1000,
+        HISTORY_LIMIT: 20
+    };
+
+    const appState = {
+        stockChart: null,
+        topProductsChart: null,
+        meatsUnsubscribe: null,
+        historyUnsubscribe: null,
+        isInitialized: false
+    };
+
+    // =======================
+    // Autenticação
+    // =======================
+
+    function checkAuth() {
+        return localStorage.getItem('authenticated') === 'true';
     }
-    
-    await updateTable();
-    await updateHistoryDisplay();
-}
 
-// Função para remover carne pelo índice
-async function removeMeatByIndex(index) {
-    const meatStock = await getAllMeats();
-    const meat = meatStock[index];
-    
-    if (confirm(`Tem certeza que deseja remover ${meat.name} do estoque?`)) {
-        await addHistoryRecord({
-            action: 'delete',
-            meatName: meat.name,
-            quantity: 0,
-            oldQuantity: meat.quantity
-        });
-        
-        await deleteMeat(meat.name);
-        await updateTable();
-        await updateHistoryDisplay();
+    function redirectToLogin() {
+        window.location.replace('login.html');
     }
-}
 
-// Função para popular o banco de dados com dados iniciais
-async function populateInitialData() {
-    const initialData = [
-        { name: 'Alcatra com maminha', quantity: 10 },
-        { name: 'Capa de Filé', quantity: 62 },
-        { name: 'Contra Filé', quantity: 4 },
-        { name: 'Costelão bovino', quantity: 10 },
-        { name: 'Costela suína', quantity: 8 },
-        { name: 'Picanha bovina', quantity: 29 },
-        { name: 'Picanha suína', quantity: 4 },
-        { name: 'Coxão mole', quantity: 5 },
-        { name: 'Fraldinha', quantity: 13 },
-        { name: 'Cupim', quantity: 10 },
-        { name: 'Coração', quantity: 19 },
-        { name: 'Coxa com sobrecoxa', quantity: 54 },
-        { name: 'Filé de frango', quantity: 26 },
-        { name: 'Maminha da alcatra', quantity: 16 },
-        { name: 'Linguiça apimentada', quantity: 3 },
-        { name: 'Linguiça de frango', quantity: 1 },
-        { name: 'Linguiça mista', quantity: 3 }
-    ];
-    
-    const tx = db.transaction(STORE_MEATS, 'readwrite');
-    const store = tx.objectStore(STORE_MEATS);
-    
-    initialData.forEach(meat => {
-        store.put(meat);
-    });
-    
-    await addHistoryRecord({
-        action: 'add',
-        meatName: 'Estoque Inicial',
-        quantity: 0,
-        oldQuantity: null
-    });
-    
-    return new Promise((resolve) => {
-        tx.oncomplete = () => resolve();
-    });
-}
+    function handleLogout(e) {
+        if (e) e.preventDefault();
+        firebase.auth().signOut().then(() => {
+            cleanupFirestoreListeners();
+            clearUserData();
+            redirectToLogin();
+        }).catch(error => {
+            console.error('Erro ao fazer logout:', error);
+            alert('Erro ao sair. Tente novamente.');
+        });
+    }
 
-// Inicializa a aplicação quando a página carrega
-async function initializeApp() {
-    try {
+    function clearUserData() {
+        localStorage.removeItem('authenticated');
+        localStorage.removeItem('userEmail');
+    }
+
+    // =======================
+    // Inicialização
+    // =======================
+
+    function initializeApp() {
         if (!checkAuth()) {
-            window.location.href = 'login.html';
+            redirectToLogin();
             return;
         }
 
-        const currentUserElement = document.getElementById('currentUser');
-        if (currentUserElement) {
-            currentUserElement.textContent = localStorage.getItem('username') || '';
+        try {
+            setupUI();
+            setupEventListeners();
+            initializeFirestoreListeners();
+            adjustChartHeights();
+            appState.isInitialized = true;
+        } catch (error) {
+            console.error("Erro ao inicializar aplicação:", error);
+            alert("Erro ao carregar o aplicativo");
         }
+    }
+
+    function setupUI() {
+        const authContent = document.querySelector('.authenticated-content');
+        const currentUserElement = document.getElementById('currentUser');
+        if (authContent) authContent.style.display = 'block';
+        if (currentUserElement) {
+            currentUserElement.textContent = localStorage.getItem('userEmail') || '';
+        }
+    }
+
+    function setupEventListeners() {
+        window.addEventListener('resize', handleWindowResize);
 
         const hamburger = document.querySelector('.hamburger-menu');
         const mobileNav = document.getElementById('mobileNav');
         const menuOverlay = document.getElementById('menuOverlay');
 
         if (hamburger && mobileNav && menuOverlay) {
-            hamburger.addEventListener('click', function() {
-                mobileNav.classList.toggle('active');
-                menuOverlay.classList.toggle('active');
-            });
+            hamburger.addEventListener('click', toggleMobileMenu);
+            menuOverlay.addEventListener('click', closeMobileMenu);
+        }
 
-            menuOverlay.addEventListener('click', function() {
-                mobileNav.classList.remove('active');
-                this.classList.remove('active');
+        document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
+        document.getElementById('mobileLogoutBtn')?.addEventListener('click', handleLogout);
+
+        setupAddMeatModal();
+    }
+
+    // =======================
+    // Firestore
+    // =======================
+
+    function initializeFirestoreListeners() {
+        cleanupFirestoreListeners();
+
+        appState.meatsUnsubscribe = db.collection("meats")
+            .onSnapshot(handleMeatsUpdate, error => handleFirestoreError("estoque", error));
+
+        appState.historyUnsubscribe = db.collection("history")
+            .orderBy("timestamp", "desc")
+            .limit(APP_CONSTANTS.HISTORY_LIMIT)
+            .onSnapshot(handleHistoryUpdate, error => handleFirestoreError("histórico", error));
+
+        checkInitialData();
+    }
+
+    function cleanupFirestoreListeners() {
+        if (appState.meatsUnsubscribe) appState.meatsUnsubscribe();
+        if (appState.historyUnsubscribe) appState.historyUnsubscribe();
+        appState.meatsUnsubscribe = null;
+        appState.historyUnsubscribe = null;
+    }
+
+    async function checkInitialData() {
+        const snapshot = await db.collection("meats").limit(1).get();
+        if (snapshot.empty) await populateInitialData();
+    }
+
+    async function populateInitialData() {
+        const initialMeats = [
+            { name: 'Picanha', quantity: 20 },
+            { name: 'Costela', quantity: 30 },
+            { name: 'Fraldinha', quantity: 15 },
+            { name: 'Linguiça', quantity: 25 },
+            { name: 'Coxa de Frango', quantity: 40 }
+        ];
+
+        const batch = db.batch();
+        initialMeats.forEach(meat => {
+            const docRef = db.collection('meats').doc();
+            batch.set(docRef, meat);
+        });
+
+        await batch.commit();
+    }
+
+    async function getAllMeats() {
+        const snapshot = await db.collection("meats").get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    async function handleMeatsUpdate() {
+        await updateTable();
+        await updateCharts();
+    }
+
+    async function updateTable() {
+        const tableBody = document.getElementById('meatTableBody');
+        if (!tableBody) return;
+
+        const meats = await getAllMeats();
+        tableBody.innerHTML = '';
+
+        meats.forEach((meat, index) => {
+            const row = document.createElement('tr');
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = meat.name;
+            row.appendChild(nameCell);
+
+            const quantityCell = document.createElement('td');
+            quantityCell.textContent = meat.quantity;
+            row.appendChild(quantityCell);
+
+            const actionsCell = document.createElement('td');
+            actionsCell.className = 'action-buttons';
+            actionsCell.appendChild(createActionButtons(index));
+            row.appendChild(actionsCell);
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    function createActionButtons(index) {
+        const isMobile = window.innerWidth <= 768;
+        const container = document.createElement('div');
+        container.className = isMobile ? 'button-group-mobile' : 'quantity-control';
+
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'number';
+        quantityInput.min = APP_CONSTANTS.MIN_QUANTITY.toString();
+        quantityInput.step = '1';
+        quantityInput.value = '1';
+        quantityInput.className = isMobile ? 'quantity-input compact' : 'quantity-input';
+        quantityInput.id = `qty-${index}`;
+        container.appendChild(quantityInput);
+
+        const addButton = createActionButton('add', 'fa-plus', isMobile ? '' : 'Adicionar', () => adjustQuantity(index, true));
+        const removeButton = createActionButton('remove', 'fa-minus', isMobile ? '' : 'Remover', () => adjustQuantity(index, false));
+        const deleteButton = createActionButton('delete', 'fa-trash', isMobile ? '' : 'Excluir', () => removeMeatByIndex(index));
+
+        container.append(addButton, removeButton, deleteButton);
+
+        return container;
+    }
+
+    function createActionButton(action, icon, text, onClick) {
+        const button = document.createElement('button');
+        button.className = `btn-${action}`;
+        button.innerHTML = `<i class="fas ${icon}"></i>${text ? ' ' + text : ''}`;
+        button.addEventListener('click', onClick);
+        return button;
+    }
+
+    async function adjustQuantity(index, isAdding) {
+        const meats = await getAllMeats();
+        const meat = meats[index];
+        if (!meat) return;
+
+        const input = document.getElementById(`qty-${index}`);
+        const qty = parseInt(input.value);
+
+        if (isNaN(qty) || qty < 1) {
+            alert("Digite uma quantidade válida.");
+            return;
+        }
+
+        const newQuantity = isAdding ? meat.quantity + qty : meat.quantity - qty;
+        if (newQuantity < 0) {
+            alert("Quantidade não pode ser negativa.");
+            return;
+        }
+
+        await db.collection('meats').doc(meat.id).update({ quantity: newQuantity });
+        await db.collection('history').add({
+            name: meat.name,
+            action: isAdding ? 'add' : 'remove',
+            quantity: qty,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    async function removeMeatByIndex(index) {
+        const meats = await getAllMeats();
+        const meat = meats[index];
+        if (!meat) return;
+
+        await db.collection('meats').doc(meat.id).delete();
+        await db.collection('history').add({
+            name: meat.name,
+            action: 'delete',
+            quantity: meat.quantity,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    function handleHistoryUpdate(snapshot) {
+        const historyContainer = document.getElementById('movementHistory');
+        if (!historyContainer) return;
+
+        historyContainer.innerHTML = '';
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const item = document.createElement('div');
+            item.className = `history-item ${data.action}`;
+
+            item.innerHTML = `
+                <div>
+                    <strong>${data.name}</strong> - ${data.quantity} peças
+                    <div class="history-details">${data.action === 'add' ? 'Adicionado' : data.action === 'remove' ? 'Removido' : 'Excluído'}</div>
+                </div>
+                <div class="history-time">${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : ''}</div>
+            `;
+
+            historyContainer.appendChild(item);
+        });
+    }
+
+    // =======================
+    // Modal de Adicionar Corte
+    // =======================
+
+    function setupAddMeatModal() {
+        const addBtn = document.getElementById('addMeatBtn');
+        const modal = document.getElementById('addMeatModal');
+        const confirm = document.getElementById('confirmAddMeat');
+        const cancel = document.getElementById('cancelAddMeat');
+
+        if (!addBtn || !modal) return;
+
+        addBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+
+        cancel.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        confirm.addEventListener('click', async () => {
+            const name = document.getElementById('newMeatName').value.trim();
+            const quantity = parseInt(document.getElementById('newMeatQuantity').value);
+
+            if (!name || isNaN(quantity) || quantity < 1) {
+                alert('Preencha todos os campos corretamente');
+                return;
+            }
+
+            try {
+                await db.collection('meats').add({
+                    name,
+                    quantity
+                });
+
+                await db.collection('history').add({
+                    name,
+                    action: 'add',
+                    quantity,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                modal.style.display = 'none';
+                document.getElementById('newMeatName').value = '';
+                document.getElementById('newMeatQuantity').value = '';
+            } catch (error) {
+                console.error('Erro ao adicionar novo corte:', error);
+                alert('Erro ao adicionar corte');
+            }
+        });
+    }
+
+    // =======================
+    // Gráficos
+    // =======================
+
+    function handleWindowResize() {
+        adjustChartHeights();
+        if (appState.stockChart) appState.stockChart.resize();
+        if (appState.topProductsChart) appState.topProductsChart.resize();
+    }
+
+    function adjustChartHeights() {
+        const isMobile = window.innerWidth <= 768;
+        const stockChartContainer = document.getElementById('stockChartContainer');
+        const topProductsChartContainer = document.getElementById('topProductsChartContainer');
+
+        if (stockChartContainer) {
+            stockChartContainer.style.height = isMobile ? '250px' : '400px';
+        }
+
+        if (topProductsChartContainer) {
+            topProductsChartContainer.style.height = isMobile ? '250px' : '350px';
+        }
+    }
+
+    async function updateCharts() {
+        destroyCharts();
+        await createCharts();
+    }
+
+    function destroyCharts() {
+        if (appState.stockChart) {
+            appState.stockChart.destroy();
+            appState.stockChart = null;
+        }
+        if (appState.topProductsChart) {
+            appState.topProductsChart.destroy();
+            appState.topProductsChart = null;
+        }
+    }
+
+    async function createCharts() {
+        const meats = (await getAllMeats()).sort((a, b) => b.quantity - a.quantity);
+
+        const stockCtx = document.getElementById('stockChart')?.getContext('2d');
+        if (stockCtx) {
+            appState.stockChart = new Chart(stockCtx, {
+                type: 'bar',
+                data: {
+                    labels: meats.map(m => m.name),
+                    datasets: [{
+                        label: 'Estoque (peças)',
+                        data: meats.map(m => m.quantity),
+                        backgroundColor: meats.map(m => {
+                    if (m.quantity >= 30) return '#2ecc71';
+                    if (m.quantity >= 10) return '#f39c12';
+                    return '#e74c3c';
+                })
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
             });
         }
 
-        document.getElementById('mobileLogoutBtn')?.addEventListener('click', logout);
+        
+    const historySnapshot = await db.collection("history")
+        .where("action", "==", "remove")
+        .get();
 
-        await initDB();
-        adjustChartHeights();
-        await updateTable();
-        await updateHistoryDisplay();
-    } catch (error) {
-        console.error('Erro ao inicializar a aplicação:', error);
-        alert('Ocorreu um erro ao carregar a aplicação. Por favor, recarregue a página.');
+    const removalTotals = {};
+    historySnapshot.forEach(doc => {
+        const { name, quantity } = doc.data();
+        if (!removalTotals[name]) removalTotals[name] = 0;
+        removalTotals[name] += quantity;
+    });
+
+    const sortedRemovals = Object.entries(removalTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    const topCtx = document.getElementById('topProductsChart')?.getContext('2d');
+    if (topCtx) {
+        appState.topProductsChart = new Chart(topCtx, {
+            type: 'doughnut',
+            data: {
+                labels: sortedRemovals.map(entry => entry[0]),
+                datasets: [{
+                    label: 'Mais consumidas',
+                    data: sortedRemovals.map(entry => entry[1]),
+                    backgroundColor: [
+                        '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15,
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
     }
 }
 
-// Redimensiona os gráficos quando a janela é redimensionada
-window.addEventListener('resize', function() {
-    adjustChartHeights();
-    if (stockChart) stockChart.resize();
-    if (topProductsChart) topProductsChart.resize();
-});
+    function toggleMobileMenu() {
+        const mobileNav = document.getElementById('mobileNav');
+        const menuOverlay = document.getElementById('menuOverlay');
+        if (mobileNav && menuOverlay) {
+            mobileNav.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+    }
 
-// Inicia a aplicação
-document.addEventListener('DOMContentLoaded', initializeApp);
+    function closeMobileMenu() {
+        const mobileNav = document.getElementById('mobileNav');
+        const menuOverlay = document.getElementById('menuOverlay');
+        if (mobileNav && menuOverlay) {
+            mobileNav.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+    }
+
+    function handleFirestoreError(context, error) {
+        console.error(`Erro no listener de ${context}:`, error);
+        alert(`Erro ao atualizar ${context}. Tente recarregar a página.`);
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeApp);
+
+    window.ChurrasControl = {
+        adjustQuantity,
+        removeMeatByIndex,
+        updateCharts
+    };
+})();

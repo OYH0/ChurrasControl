@@ -1,16 +1,41 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta name="ethereum-dapp-url-bar" content="none">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>🍖 ChurrasControl - Gestão de Carnes</title>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
 </head>
+
 <body>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('authenticated') !== 'true') {
+                console.log('Redirecionando para login - usuário não autenticado');
+                window.location.replace('login.html');
+                return;
+            }
+
+            const authContent = document.querySelector('.authenticated-content');
+            if (authContent) authContent.style.display = 'block';
+
+            const userEmail = localStorage.getItem('userEmail');
+            const userElement = document.getElementById('currentUser');
+            if (userEmail && userElement) {
+                userElement.textContent = userEmail;
+            }
+        });
+    </script>
+
     <div class="container authenticated-content" style="display:none;">
         <header>
             <div class="header-content">
@@ -53,7 +78,7 @@
                 <thead>
                     <tr>
                         <th>Corte de Carne</th>
-                        <th>Quantidade (kg)</th>
+                        <th>Quantidade (PÇ)</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -61,6 +86,23 @@
                     <!-- As linhas serão preenchidas pelo JavaScript -->
                 </tbody>
             </table>
+        </div>
+
+        <!-- Botão de adicionar novo corte -->
+        <div style="text-align: right; margin-top: -10px;">
+            <button id="addMeatBtn"><i class="fas fa-plus"></i> Adicionar Novo Corte</button>
+        </div>
+
+        <!-- Modal de adicionar novo corte -->
+        <div id="addMeatModal" class="mobile-modal">
+            <div class="modal-content">
+                <h3>Adicionar Corte</h3>
+                <input type="text" id="newMeatName" placeholder="Nome do corte">
+                <input type="number" id="newMeatQuantity" placeholder="Quantidade (peças)" min="1">
+                <div id="addMeatError" class="error-message"></div>
+                <button id="confirmAddMeat" class="login-btn">Adicionar</button>
+                <button id="cancelAddMeat" class="cancel-btn">Cancelar</button>
+            </div>
         </div>
 
         <div class="history">
@@ -71,6 +113,7 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
 </body>

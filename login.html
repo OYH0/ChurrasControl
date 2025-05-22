@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>🍖 ChurrasControl - Login</title>
     <link rel="stylesheet" href="css/login.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,19 +22,22 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label for="username"><i class="fas fa-user"></i> Usuário</label>
-                    <input type="text" id="username" name="username" required autocomplete="username">
+                    <input type="email" id="username" name="username" required autocomplete="username">
                     <div id="usernameError" class="error-message"></div>
                 </div>
                 
                 <div class="form-group">
                     <label for="password"><i class="fas fa-lock"></i> Senha</label>
-                    <input type="password" id="password" name="password" required minlength="4" autocomplete="current-password">
+                    <input type="password" id="password" name="password" required minlength="6" autocomplete="current-password">
                     <div id="passwordError" class="error-message"></div>
                 </div>
                 
                 <button type="submit" class="login-btn">
                     <i class="fas fa-sign-in-alt"></i> Entrar
                 </button>
+
+                <div id="loginError" class="error-message" style="text-align: center; margin-top: 15px;"></div>
+                <div id="connection-status" style="text-align: center; margin-top: 10px; font-size: 0.8rem;"></div>
             </form>
             
             <div class="login-footer">
@@ -41,16 +47,24 @@
     </div>
 
     <!-- Modal para registro mobile -->
-    <div id="mobileRegisterModal" class="mobile-modal" style="display: none;">
+    <div id="mobileRegisterModal" class="mobile-modal">
         <div class="modal-content">
             <h3>Cadastro</h3>
-            <input type="text" id="mobileUsername" placeholder="Nome de usuário">
-            <input type="password" id="mobilePassword" placeholder="Senha (mínimo 4 caracteres)">
-            <button id="confirmRegister">Cadastrar</button>
-            <button id="cancelRegister">Cancelar</button>
+            <input type="email" id="mobileUsername" placeholder="Email">
+            <input type="password" id="mobilePassword" placeholder="Senha (mínimo 6 caracteres)">
+            <div id="registerError" class="error-message"></div>
+            <button id="confirmRegister" class="login-btn">Cadastrar</button>
+            <button id="cancelRegister" class="cancel-btn">Cancelar</button>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    
+    <!-- App Scripts -->
     <script src="js/auth.js"></script>
 </body>
 </html>

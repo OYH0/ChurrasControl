@@ -960,3 +960,115 @@ th:nth-child(3) { width: 50%; }  /* Ações */
         white-space: nowrap;
     }
 }
+
+/* Estilo específico para o botão "Adicionar Novo Corte" abaixo da tabela */
+#addMeatBtn {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: var(--secondary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+#addMeatBtn:hover {
+    background-color: var(--secondary-dark);
+    transform: translateY(-2px);
+}
+
+/* Modal container */
+#addMeatModal {
+    display: none; /* será ativado com JS */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Quando ativado via JS */
+#addMeatModal.active {
+    display: flex;
+}
+
+/* Caixa do modal */
+#addMeatModal .modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Campos de entrada */
+#addMeatModal input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+/* Botões dentro do modal */
+#addMeatModal .login-btn,
+#addMeatModal .cancel-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Botão Adicionar */
+#addMeatModal .login-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+}
+
+/* Botão Cancelar */
+#addMeatModal .cancel-btn {
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: none;
+}
+
+/* Animação opcional */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    #currentUser {
+        display: none;
+    }
+}
+@media (max-width: 768px) {
+  header h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1.6rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  header h1 i {
+    display: inline-block;
+    font-size: 1.4rem;
+    margin: 0;
+  }
+}

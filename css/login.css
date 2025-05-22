@@ -1,5 +1,4 @@
 :root {
-    /* Cores atualizadas */
     --primary: #e74c3c;
     --primary-dark: #c0392b;
     --primary-light: rgba(231, 76, 60, 0.1);
@@ -16,7 +15,6 @@
     --success: #2ecc71;
     --info: #3498db;
     
-    /* Efeitos atualizados */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -34,7 +32,10 @@
 
 body {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #f8f9fa;
+    background-image: url("https://images.unsplash.com/photo-1558030006-450675393462?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: var(--dark);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -47,14 +48,13 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
     padding: 20px;
 }
 
 .login-card {
     background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     padding: 40px;
     width: 100%;
     max-width: 450px;
@@ -92,7 +92,7 @@ body {
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: 16px;
     transition: var(--transition);
 }
@@ -100,7 +100,7 @@ body {
 .form-group input:focus {
     border-color: var(--primary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .login-btn {
@@ -109,7 +109,7 @@ body {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -119,8 +119,6 @@ body {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
 }
 
 .login-btn:hover {
@@ -142,4 +140,87 @@ body {
 
 .login-footer a:hover {
     text-decoration: underline;
+}
+
+.error-message {
+    color: var(--danger);
+    font-size: 0.9rem;
+    margin-top: 5px;
+    display: none;
+}
+
+/* Modal Styles */
+.mobile-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.mobile-modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: var(--radius-md);
+    width: 90%;
+    max-width: 400px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-content h3 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--dark);
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+}
+
+.cancel-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--gray-light);
+    color: var(--dark);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.cancel-btn:hover {
+    background: var(--gray);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 25px;
+    }
+    
+    .login-header h1 {
+        font-size: 1.5rem;
+    }
 }
