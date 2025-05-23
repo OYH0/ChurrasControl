@@ -144,7 +144,7 @@ function isAdmin() {
         const snapshot = await db.collection("meats").limit(1).get();
         if (snapshot.empty) await populateInitialData();
     }
-
+/*
     async function populateInitialData() {
         const initialMeats = [
             { name: 'Picanha', quantity: 20 },
@@ -162,7 +162,7 @@ function isAdmin() {
 
         await batch.commit();
     }
-
+*/
     async function getAllMeats() {
         const snapshot = await db.collection("meats").get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
