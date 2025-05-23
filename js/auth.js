@@ -14,6 +14,11 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
+// Função para verificar se o usuário é o administrador
+function isAdminUser(user) {
+  return user && user.uid === "jHDI7Hcy9oXsQtwKMCiNABmu6dH2";
+}
+
 // Referências globais
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -113,6 +118,7 @@ auth.onAuthStateChanged(user => {
   if (user) {
     localStorage.setItem('authenticated', 'true');
     localStorage.setItem('userEmail', user.email);
+    localStorage.setItem('isAdmin', isAdminUser(user) ? 'true' : 'false');
     
     if (isLoginPage) {
       window.location.replace('index.html');
@@ -120,6 +126,7 @@ auth.onAuthStateChanged(user => {
   } else {
     localStorage.removeItem('authenticated');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('isAdmin');
     
     if (!isLoginPage && !window.location.pathname.includes('register.html')) {
       window.location.replace('login.html');

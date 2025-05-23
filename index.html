@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>🍖 ChurrasControl - Gestão de Carnes</title>
+    <title>ChurrasControl - Gestão de Carnes</title>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -65,16 +65,17 @@
                 </div>
             </div>
             
-            <div class="chart-container">
-                <h2 class="chart-title"><i class="fas fa-chart-pie"></i> Top 5 Carnes</h2>
+            <div class="chart-container pie-chart-container">
+                <h2 class="chart-title"><i class="fas fa-chart-pie"></i> Top 5 Carnes Mais Consumidas</h2>
                 <div id="topProductsChartContainer" class="chart-wrapper">
                     <canvas id="topProductsChart"></canvas>
                 </div>
+                <div class="pie-legend" id="pieChartLegend"></div>
             </div>
         </div>
         
         <div style="overflow-x: auto;">
-            <table id="meatTable">
+            <table id="meatTable" class="non-admin-view">
                 <thead>
                     <tr>
                         <th>Corte de Carne</th>

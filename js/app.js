@@ -1,3 +1,7 @@
+function isAdmin() {
+  return localStorage.getItem('isAdmin') === 'true';
+}
+
 (function() {
     if (typeof firebase === 'undefined' || !firebase.apps.length) {
         console.error('Firebase não foi inicializado corretamente');
@@ -75,9 +79,21 @@
     function setupUI() {
         const authContent = document.querySelector('.authenticated-content');
         const currentUserElement = document.getElementById('currentUser');
+        const addMeatBtn = document.getElementById('addMeatBtn');
+        const meatTable = document.getElementById('meatTable');
+        
         if (authContent) authContent.style.display = 'block';
         if (currentUserElement) {
             currentUserElement.textContent = localStorage.getItem('userEmail') || '';
+            if (isAdmin()) {
+                currentUserElement.classList.add('admin');
+                currentUserElement.title = "Usuário Administrador";
+                meatTable.classList.add('admin-view');
+            }
+        }
+        
+        if (addMeatBtn) {
+            addMeatBtn.style.display = isAdmin() ? 'inline-block' : 'none';
         }
     }
 
@@ -160,26 +176,33 @@
     async function updateTable() {
         const tableBody = document.getElementById('meatTableBody');
         if (!tableBody) return;
-
+    
         const meats = await getAllMeats();
         tableBody.innerHTML = '';
-
+    
         meats.forEach((meat, index) => {
             const row = document.createElement('tr');
-
+    
             const nameCell = document.createElement('td');
             nameCell.textContent = meat.name;
             row.appendChild(nameCell);
-
+    
             const quantityCell = document.createElement('td');
-            quantityCell.textContent = meat.quantity;
+            if (isAdmin()) {
+                quantityCell.textContent = meat.quantity;
+            } else {
+                const quantityDisplay = document.createElement('span');
+                quantityDisplay.className = 'quantity-display';
+                quantityDisplay.textContent = meat.quantity;
+                quantityCell.appendChild(quantityDisplay);
+            }
             row.appendChild(quantityCell);
-
+    
             const actionsCell = document.createElement('td');
             actionsCell.className = 'action-buttons';
             actionsCell.appendChild(createActionButtons(index));
             row.appendChild(actionsCell);
-
+    
             tableBody.appendChild(row);
         });
     }
@@ -188,7 +211,17 @@
         const isMobile = window.innerWidth <= 768;
         const container = document.createElement('div');
         container.className = isMobile ? 'button-group-mobile' : 'quantity-control';
-
+    
+        if (!isAdmin()) {
+            // Para usuários não-admin, apenas mostre a quantidade
+            const quantitySpan = document.createElement('span');
+            quantitySpan.className = 'quantity-display';
+            quantitySpan.id = `qty-display-${index}`;
+            container.appendChild(quantitySpan);
+            return container;
+        }
+    
+        // Código original para admin continua aqui...
         const quantityInput = document.createElement('input');
         quantityInput.type = 'number';
         quantityInput.min = APP_CONSTANTS.MIN_QUANTITY.toString();
@@ -197,13 +230,13 @@
         quantityInput.className = isMobile ? 'quantity-input compact' : 'quantity-input';
         quantityInput.id = `qty-${index}`;
         container.appendChild(quantityInput);
-
+    
         const addButton = createActionButton('add', 'fa-plus', isMobile ? '' : 'Adicionar', () => adjustQuantity(index, true));
         const removeButton = createActionButton('remove', 'fa-minus', isMobile ? '' : 'Remover', () => adjustQuantity(index, false));
         const deleteButton = createActionButton('delete', 'fa-trash', isMobile ? '' : 'Excluir', () => removeMeatByIndex(index));
-
+    
         container.append(addButton, removeButton, deleteButton);
-
+    
         return container;
     }
 
@@ -337,11 +370,19 @@
     // =======================
 
     function handleWindowResize() {
-        adjustChartHeights();
-        if (appState.stockChart) appState.stockChart.resize();
-        if (appState.topProductsChart) appState.topProductsChart.resize();
+        const chartContainer = document.getElementById('stockChartContainer');
+        if (chartContainer) {
+            const isMobile = window.innerWidth <= 768;
+            chartContainer.style.height = isMobile ? '400px' : '600px';
+            chartContainer.style.width = isMobile ? '95%' : '90%';
+        }
+        
+        if (appState.stockChart) {
+            appState.stockChart.options.scales.x.ticks.font.size = window.innerWidth <= 768 ? 10 : 12;
+            appState.stockChart.update();
+        }
     }
-
+    
     function adjustChartHeights() {
         const isMobile = window.innerWidth <= 768;
         const stockChartContainer = document.getElementById('stockChartContainer');
@@ -385,16 +426,81 @@
                         label: 'Estoque (peças)',
                         data: meats.map(m => m.quantity),
                         backgroundColor: meats.map(m => {
-                    if (m.quantity >= 30) return '#2ecc71';
-                    if (m.quantity >= 10) return '#f39c12';
-                    return '#e74c3c';
-                })
+                            if (m.quantity >= 30) return '#2ecc71';
+                            if (m.quantity >= 10) return '#f39c12';
+                            return '#e74c3c';
+                        }),
+                        barThickness: 'flex',
+                        maxBarThickness: 50,
+                        minBarLength: 5
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: {
+                            display: false,
+                            align: 'center',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            bodyFont: { size: 14 },
+                            titleFont: { size: 16 },
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} peças`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                align: 'center',
+                                font: {
+                                    size: window.innerWidth <= 768 ? 10 : 12
+                                }
+                            },
+                            grid: {
+                                display: false,
+                                offset: true
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    size: 12
+                                },
+                                precision: 0,
+                                callback: function(value) {
+                                    if (value % 1 === 0) return value;
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 20,
+                            right: 20,
+                            top: 20,
+                            bottom: 40
+                        }
                     }
                 }
             });
@@ -408,8 +514,7 @@
     const removalTotals = {};
     historySnapshot.forEach(doc => {
         const { name, quantity } = doc.data();
-        if (!removalTotals[name]) removalTotals[name] = 0;
-        removalTotals[name] += quantity;
+        removalTotals[name] = (removalTotals[name] || 0) + quantity;
     });
 
     const sortedRemovals = Object.entries(removalTotals)
@@ -426,26 +531,84 @@
                     label: 'Mais consumidas',
                     data: sortedRemovals.map(entry => entry[1]),
                     backgroundColor: [
-                        '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'
+                        '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6',
+                        '#1abc9c', '#d35400', '#34495e', '#7f8c8d', '#c0392b'
                     ],
                     borderColor: '#fff',
-                    borderWidth: 2
+                    borderWidth: 2,
+                    hoverOffset: 10,
+                    borderRadius: 6,
+                    spacing: 4
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
                 plugins: {
                     legend: {
-                        position: 'right',
-                        labels: {
-                            boxWidth: 15,
-                            padding: 20
+                        display: false, // Vamos usar legenda customizada
+                    },
+                    tooltip: {
+                        bodyFont: { size: 14 },
+                        titleFont: { size: 16 },
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
                         }
                     }
+                },
+                layout: {
+                    padding: {
+                        top: 20,
+                        right: 20,
+                        bottom: 20,
+                        left: 20
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
                 }
             }
         });
+
+        // Atualizar legenda customizada
+        updatePieChartLegend();
     }
+}
+
+// Função para criar legenda customizada
+function updatePieChartLegend() {
+    if (!appState.topProductsChart) return;
+    
+    const legendContainer = document.getElementById('pieChartLegend');
+    if (!legendContainer) return;
+    
+    const legendItems = [];
+    const data = appState.topProductsChart.data;
+    
+    data.datasets.forEach((dataset, i) => {
+        dataset.data.forEach((value, j) => {
+            const label = data.labels[j];
+            const color = dataset.backgroundColor[j];
+            const percentage = Math.round((value / dataset.data.reduce((a, b) => a + b, 0)) * 100);
+            
+            legendItems.push(`
+                <div class="pie-legend-item">
+                    <span class="pie-legend-color" style="background-color: ${color};"></span>
+                    ${label} (${value} - ${percentage}%)
+                </div>
+            `);
+        });
+    });
+    
+    legendContainer.innerHTML = legendItems.join('');
 }
 
     function toggleMobileMenu() {
